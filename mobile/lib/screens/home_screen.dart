@@ -1,8 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:math' as math; // Required for 3D angles
+import 'vehicle_dashboard.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // The master timer controls the total duration of all flips
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+    // Automatically start the animation when the screen loads
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,37 +46,95 @@ class HomeScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          _buildVehicleCard(
-            context,
-            nickname: 'Daily Driver',
-            model: 'Mahindra 3XO ',
-            plate: 'KL 36 M 3020',
+          _buildAnimatedCard(
+            index: 0, // First card to flip
+            child: _buildVehicleCard(
+              context,
+              nickname: 'Daily Driver',
+              model: 'Mahindra 3XO',
+              plate: 'KL 36 M 3020',
+            ),
           ),
           const SizedBox(height: 24),
-          _buildVehicleCard(
-            context,
-            nickname: 'Weekend Ride',
-            model: 'Royal Enfield GT 650',
-            plate: 'KL 36 X 9999',
+          _buildAnimatedCard(
+            index: 1, // Second card to flip
+            child: _buildVehicleCard(
+              context,
+              nickname: 'Weekend Ride',
+              model: 'Royal Enfield GT 650',
+              plate: 'KL 36 X 9999',
+            ),
+          ),
+
+
+          const SizedBox(height: 24),
+          _buildAnimatedCard(
+            index: 2, // Second card to flip
+            child: _buildVehicleCard(
+              context,
+              nickname: 'Office',
+              model: 'Honda CB 350RS',
+              plate: 'KL 36 X 9999',
+            ),
           ),
         ],
       ),
     );
   }
 
+  // The 3D Hinge Logic
+  Widget _buildAnimatedCard({required int index, required Widget child}) {
+    // Calculates the delay based on the index (0.2 seconds between each card)
+    final double start = index * 0.2;
+    final double end = (start + 0.6).clamp(0.0, 1.0);
+
+    final animation = CurvedAnimation(
+      parent: _controller,
+      curve: Interval(start, end, curve: Curves.easeOutQuint),
+    );
+
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        // Map the animation value (0 to 1) into an angle (90 degrees to 0 degrees)
+        final angle = (1 - animation.value) * (math.pi / 2);
+
+        return Transform(
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.002) // Adds 3D camera depth
+            ..rotateX(-angle), // Flips the card down
+          alignment: Alignment.topCenter, // Anchors the "hinge" to the top edge
+          child: child,
+        );
+      },
+      child: child,
+    );
+  }
+
+  // Your Original Beautiful Card Design
   Widget _buildVehicleCard(BuildContext context,
       {required String nickname, required String model, required String plate}) {
     return GestureDetector(
       onTap: () {
-        // We will wire this up to navigate to the specific car's dashboard later
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Loading $nickname...')),
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => VehicleDashboard(
+              nickname: nickname,
+              model: model,
+              plate: plate,
+            ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
         );
       },
       child: Container(
         height: 200,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(32), // Big rounded corners
+          borderRadius: BorderRadius.circular(32),
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -65,7 +150,6 @@ class HomeScreen extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // Minimal Icon Placeholder for Vehicle Image
             Positioned(
               right: -20,
               bottom: -20,

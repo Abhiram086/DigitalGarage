@@ -17,19 +17,15 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   _navigateToHome() async {
-    // Wait for 2.5 seconds
     await Future.delayed(const Duration(milliseconds: 2500));
-
     if (!mounted) return;
-    // Fade transition to the home screen
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 800),
+        transitionDuration: Duration.zero, // Instant cut
+        reverseTransitionDuration: Duration.zero,
       ),
     );
   }
