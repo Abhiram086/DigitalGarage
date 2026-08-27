@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 class VehicleDashboard extends StatelessWidget {
   final String nickname;
   final String model;
   final String plate;
+  final String assetPath; // New parameter for the 3D model
 
   const VehicleDashboard({
     super.key,
     required this.nickname,
     required this.model,
     required this.plate,
+    required this.assetPath,
   });
 
   @override
@@ -34,23 +37,32 @@ class VehicleDashboard extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Placeholder for your future 3D Model (.glb)
-                  Container(
-                    width: 200,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blueAccent.withOpacity(0.2),
-                          blurRadius: 50,
-                          spreadRadius: 20,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.directions_car,
-                      size: 100,
-                      color: Colors.white24,
+                  // The live 3D Model
+                  SizedBox(
+                    width: double.infinity,
+                    height: 350,
+                    child: ModelViewer(
+                      src: assetPath,
+                      alt: 'A 3D model of the vehicle',
+
+                      // 1. KEEP THE PROMPT, BUT CHANGE THE STYLE
+                      // 'basic' shows a fading cursor icon but STOPS it from yanking the car around
+                      interactionPrompt: InteractionPrompt.auto,
+                      interactionPromptStyle: InteractionPromptStyle.basic,
+
+                      // 2. CONSTANT, SMOOTH SPIN
+                      autoRotate: true,
+                      rotationPerSecond: '15deg',
+                      autoRotateDelay: 1000,
+
+                      // The locked-axis turntable settings
+                      cameraControls: true,
+                      disableZoom: true,
+                      disablePan: true,
+                      cameraOrbit: '45deg 75deg auto',
+                      minCameraOrbit: 'auto 75deg auto',
+                      maxCameraOrbit: 'auto 75deg auto',
+                      backgroundColor: Colors.transparent,
                     ),
                   ),
 
@@ -83,7 +95,7 @@ class VehicleDashboard extends StatelessWidget {
                 _buildDetailCard('Telemetry', 'Sync active. Last ping 2 mins ago.'),
                 const SizedBox(height: 12),
                 _buildDetailCard('Chassis', 'Suspension alignment within factory spec.'),
-                const SizedBox(height: 40), // Extra space for scrolling
+                const SizedBox(height: 40),
               ]),
             ),
           ),

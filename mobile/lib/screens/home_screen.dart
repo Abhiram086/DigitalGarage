@@ -47,34 +47,35 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         padding: const EdgeInsets.all(20),
         children: [
           _buildAnimatedCard(
-            index: 0, // First card to flip
+            index: 0,
             child: _buildVehicleCard(
               context,
               nickname: 'Daily Driver',
               model: 'Mahindra 3XO',
               plate: 'KL 36 M 3020',
+              assetPath: 'assets/models/generic_car.glb', // Add this!
             ),
           ),
           const SizedBox(height: 24),
           _buildAnimatedCard(
-            index: 1, // Second card to flip
+            index: 1,
             child: _buildVehicleCard(
               context,
               nickname: 'Weekend Ride',
               model: 'Royal Enfield GT 650',
               plate: 'KL 36 X 9999',
+              assetPath: 'assets/models/generic_bike.glb', // Add this!
             ),
           ),
-
-
           const SizedBox(height: 24),
           _buildAnimatedCard(
-            index: 2, // Second card to flip
+            index: 2,
             child: _buildVehicleCard(
               context,
               nickname: 'Office',
               model: 'Honda CB 350RS',
               plate: 'KL 36 X 9999',
+              assetPath: 'assets/models/generic_bike.glb', // Add this!
             ),
           ),
         ],
@@ -111,9 +112,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  // Your Original Beautiful Card Design
   Widget _buildVehicleCard(BuildContext context,
-      {required String nickname, required String model, required String plate}) {
+      {required String nickname, required String model, required String plate, required String assetPath}) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -123,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               nickname: nickname,
               model: model,
               plate: plate,
+              assetPath: assetPath, // Pass the path to the dashboard!
             ),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
