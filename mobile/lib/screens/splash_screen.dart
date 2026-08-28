@@ -20,39 +20,32 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   void initState() {
     super.initState();
 
-    // The total time it takes for the entire word to finish animating
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
     );
 
-    // Generate an animation for each individual letter
     _colorAnimations = List.generate(_title.length, (index) {
-      // Stagger the start time of each letter (e.g., G starts at 0.0s, A at 0.1s, etc.)
       final double start = index * 0.1;
       final double end = (start + 0.5).clamp(0.0, 1.0);
 
-      // This creates the "Neon Flicker" effect
       return TweenSequence<Color?>([
-        // Flicker 1: Invisible -> Blue
         TweenSequenceItem(weight: 10, tween: ColorTween(begin: Colors.transparent, end: Colors.blueAccent)),
-        // Flicker 2: Blue -> Invisible
         TweenSequenceItem(weight: 10, tween: ColorTween(begin: Colors.blueAccent, end: Colors.transparent)),
-        // Flicker 3: Invisible -> Blue
         TweenSequenceItem(weight: 10, tween: ColorTween(begin: Colors.transparent, end: Colors.blueAccent)),
-        // Settle: Blue -> White
         TweenSequenceItem(weight: 70, tween: ColorTween(begin: Colors.blueAccent, end: Colors.white)),
       ]).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(start, end, curve: Curves.linear),
-        ),
+        CurvedAnimation(parent: _controller, curve: Interval(start, end, curve: Curves.linear)),
       );
     });
 
-    // Start the animation, then navigate when it completes
-    _controller.forward().then((_) {
-      _navigateToNextScreen();
+    // --- ADD THE DELAY HERE ---
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) {
+        _controller.forward().then((_) {
+          _navigateToNextScreen();
+        });
+      }
     });
   }
 
