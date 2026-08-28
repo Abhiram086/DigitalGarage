@@ -1,0 +1,169 @@
+{
+  "makes": [
+    {
+      "name": "Maruti Suzuki",
+      "models": [
+        {
+          "name": "Swift",
+          "generations": [
+            {
+              "name": "4th Gen",
+              "year_from": 2024,
+              "year_to": null,
+              "engines": [
+                {
+                  "name": "1.2 K-Series",
+                  "displacement_cc": 1197,
+                  "fuel_type": "Petrol",
+                  "aspiration": "Naturally Aspirated",
+                  "years": [2024, 2025, 2026],
+                  "transmissions": ["MANUAL", "AUTOMATIC"]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Fronx",
+          "generations": [
+            {
+              "name": "1st Gen",
+              "year_from": 2023,
+              "year_to": null,
+              "engines": [
+                {
+                  "name": "1.2 K-Series",
+                  "displacement_cc": 1197,
+                  "fuel_type": "Petrol",
+                  "aspiration": "Naturally Aspirated",
+                  "years": [2023, 2024, 2025, 2026],
+                  "transmissions": ["MANUAL", "AUTOMATIC"]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Hyundai",
+      "models": [
+        {
+          "name": "Creta",
+          "generations": [
+            {
+              "name": "2nd Gen",
+              "year_from": 2020,
+              "year_to": null,
+              "engines": [
+                {
+                  "name": "1.5 Petrol",
+                  "displacement_cc": 1497,
+                  "fuel_type": "Petrol",
+                  "aspiration": "Naturally Aspirated",
+                  "years": [2020, 2021, 2022, 2023, 2024, 2025, 2026],
+                  "transmissions": ["MANUAL", "AUTOMATIC"]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "i20",
+          "generations": [
+            {
+              "name": "3rd Gen",
+              "year_from": 2020,
+              "year_to": null,
+              "engines": [
+                {
+                  "name": "1.2 Petrol",
+                  "displacement_cc": 1197,
+                  "fuel_type": "Petrol",
+                  "aspiration": "Naturally Aspirated",
+                  "years": [2020, 2021, 2022, 2023, 2024, 2025, 2026],
+                  "transmissions": ["MANUAL", "AUTOMATIC"]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Honda",
+      "models": [
+        {
+          "name": "City",
+          "generations": [
+            {
+              "name": "5th Gen",
+              "year_from": 2020,
+              "year_to": null,
+              "engines": [
+                {
+                  "name": "1.5 i-VTEC",
+                  "displacement_cc": 1498,
+                  "fuel_type": "Petrol",
+                  "aspiration": "Naturally Aspirated",
+                  "years": [2020, 2021, 2022, 2023, 2024, 2025, 2026],
+                  "transmissions": ["MANUAL", "AUTOMATIC"]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tata",
+      "models": [
+        {
+          "name": "Nexon",
+          "generations": [
+            {
+              "name": "1st Gen",
+              "year_from": 2017,
+              "year_to": null,
+              "engines": [
+                {
+                  "name": "1.2 Revotron",
+                  "displacement_cc": 1199,
+                  "fuel_type": "Petrol",
+                  "aspiration": "Turbocharged",
+                  "years": [2020, 2021, 2022, 2023, 2024, 2025, 2026],
+                  "transmissions": ["MANUAL", "AUTOMATIC"]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Mahindra",
+      "models": [
+        {
+          "name": "XUV700",
+          "generations": [
+            {
+              "name": "1st Gen",
+              "year_from": 2021,
+              "year_to": null,
+              "engines": [
+                {
+                  "name": "2.0 mStallion",
+                  "displacement_cc": 1997,
+                  "fuel_type": "Petrol",
+                  "aspiration": "Turbocharged",
+                  "years": [2021, 2022, 2023, 2024, 2025, 2026],
+                  "transmissions": ["MANUAL", "AUTOMATIC"]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
