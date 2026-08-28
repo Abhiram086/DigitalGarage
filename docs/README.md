@@ -2,14 +2,13 @@
 
 A next-generation vehicle management and telemetry tracking application. Digital Garage provides users with a central hub to track their vehicles' service histories, monitor predicted maintenance schedules, and interact with a futuristic 3D telemetry dashboard.
 
-## 🚀 Project Overview
+##  Project Overview
 
 This project is divided into a high-performance **Flutter** frontend featuring advanced UI/UX animations, and a secure **Django REST Framework** backend responsible for data persistence, JWT authentication, and maintenance scheduling logic.
 
-## ✨ Key Features
+##  Key Features
 
 ### 1. Cinematic Onboarding & Authentication
-* **Smart Splash Screen:** Features a custom, code-based neon-flicker animation that seamlessly executes a "Hero Transition"—gliding the splash title directly into the authentication header.
 * **Unified Auth Interface:** A fluid, single-page authentication screen using `AnimatedSize` to smoothly expand and contract registration fields without page routing or jarring cuts.
 * **Smart Gate Routing:** Background validation of JWT tokens during the boot sequence to route users instantly to their garage or the login screen.
 
@@ -30,7 +29,7 @@ This project is divided into a high-performance **Flutter** frontend featuring a
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 **Frontend (Mobile)**
 * Framework: Flutter (Dart)
@@ -45,7 +44,7 @@ This project is divided into a high-performance **Flutter** frontend featuring a
 
 ---
 
-## 🏗 Architecture & Division of Labor
+##  Architecture & Division of Labor
 
 To ensure parallel development, the architecture is strictly decoupled.
 
@@ -62,7 +61,7 @@ To ensure parallel development, the architecture is strictly decoupled.
 
 ---
 
-## 🚧 Development Roadmap
+##  Development Roadmap
 
 - [x] **Phase 1:** UI Prototyping & Theme Architecture (Dark minimal `#0F0F13` with neon blue accents).
 - [x] **Phase 2:** Splash Screen & Seamless Auth Transitions.
@@ -74,7 +73,7 @@ To ensure parallel development, the architecture is strictly decoupled.
 
 ---
 
-## ⚙️ Getting Started (Local Development)
+##  Getting Started (Local Development)
 
 ### Prerequisites
 * Flutter SDK (>= 3.0.0)
