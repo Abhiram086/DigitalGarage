@@ -5,14 +5,20 @@ import 'package:model_viewer_plus/model_viewer_plus.dart';
 class VehicleDashboard extends StatelessWidget {
   final String nickname;
   final String model;
+  final String engine;
+  final String transmission;
   final String plate;
-  final String assetPath; // New parameter for the 3D model
+  final int odometer;
+  final String assetPath;
 
   const VehicleDashboard({
     super.key,
     required this.nickname,
     required this.model,
+    required this.engine,
+    required this.transmission,
     required this.plate,
+    required this.odometer,
     required this.assetPath,
   });
 
@@ -23,39 +29,38 @@ class VehicleDashboard extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(
-          nickname,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
+        title: Text(
+          nickname.toUpperCase(),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w600, letterSpacing: 2),
+        ),
+        centerTitle: true,
       ),
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
-          // The Futuristic 3D HUD Section
+          // THE 3D HUD SECTION
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 350,
+              height: 380,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // The live 3D Model
+                  // The Live 3D Model
                   SizedBox(
                     width: double.infinity,
-                    height: 350,
+                    height: 380,
                     child: ModelViewer(
                       src: assetPath,
                       alt: 'A 3D model of the vehicle',
-
-                      // 1. KEEP THE PROMPT, BUT CHANGE THE STYLE
-                      // 'basic' shows a fading cursor icon but STOPS it from yanking the car around
                       interactionPrompt: InteractionPrompt.auto,
                       interactionPromptStyle: InteractionPromptStyle.basic,
-
-                      // 2. CONSTANT, SMOOTH SPIN
                       autoRotate: true,
                       rotationPerSecond: '15deg',
                       autoRotateDelay: 1000,
-
-                      // The locked-axis turntable settings
                       cameraControls: true,
                       disableZoom: true,
                       disablePan: true,
@@ -66,23 +71,43 @@ class VehicleDashboard extends StatelessWidget {
                     ),
                   ),
 
-                  // Futuristic Pointers / Telemetry Callouts
-                  _buildPointer(top: 40, left: 20, label: 'ENG TEMP\n88°C', alignRight: false),
-                  _buildPointer(top: 80, right: 20, label: 'AERO\nACTIVE', alignRight: true),
-                  _buildPointer(bottom: 60, left: 30, label: 'TYRES\n32 PSI', alignRight: false),
-                  _buildPointer(bottom: 40, right: 30, label: 'BATTERY\n12.4V', alignRight: true),
+                  // DYNAMIC TELEMETRY POINTERS
+                  _buildPointer(
+                    top: 40,
+                    left: 20,
+                    label: 'CHASSIS\n$model',
+                    alignRight: false,
+                  ),
+                  _buildPointer(
+                    top: 80,
+                    right: 20,
+                    label: 'ODO\n${_formatNumber(odometer)} KM',
+                    alignRight: true,
+                  ),
+                  _buildPointer(
+                    bottom: 60,
+                    left: 30,
+                    label: 'POWERTRAIN\n$engine',
+                    alignRight: false,
+                  ),
+                  _buildPointer(
+                    bottom: 40,
+                    right: 30,
+                    label: 'REGISTRATION\n$plate',
+                    alignRight: true,
+                  ),
                 ],
               ),
             ),
           ),
 
-          // The Scrollable Details Section
+          // THE ACTUAL METRICS SECTION
           SliverPadding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 Text(
-                  'SYSTEM DIAGNOSTICS',
+                  'BASELINE METRICS',
                   style: GoogleFonts.robotoMono(
                     color: Colors.blueAccent,
                     fontWeight: FontWeight.bold,
@@ -90,11 +115,30 @@ class VehicleDashboard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildDetailCard('Powertrain', 'All systems nominal. Next service in 4,200 km.'),
+
+                _buildDataCard(
+                  icon: Icons.fingerprint_rounded,
+                  title: 'Vehicle Identity',
+                  line1: 'Alias: $nickname',
+                  line2: 'Plates: $plate',
+                ),
                 const SizedBox(height: 12),
-                _buildDetailCard('Telemetry', 'Sync active. Last ping 2 mins ago.'),
+
+                _buildDataCard(
+                  icon: Icons.settings_suggest_rounded,
+                  title: 'Hardware Specification',
+                  line1: 'Engine: $engine',
+                  line2: 'Transmission: $transmission',
+                ),
                 const SizedBox(height: 12),
-                _buildDetailCard('Chassis', 'Suspension alignment within factory spec.'),
+
+                _buildDataCard(
+                  icon: Icons.timeline_rounded,
+                  title: 'Maintenance Tracking',
+                  line1: 'Current Read: ${_formatNumber(odometer)} km',
+                  // Simple predictive logic: adds 10k to current odo for next service interval
+                  line2: 'Est. Next Service: ${_formatNumber(odometer + 10000)} km',
+                ),
                 const SizedBox(height: 40),
               ]),
             ),
@@ -104,8 +148,21 @@ class VehicleDashboard extends StatelessWidget {
     );
   }
 
+  // Helper to format large numbers with commas (e.g., 12500 -> 12,500)
+  String _formatNumber(int number) {
+    return number.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+  }
+
   // Futuristic HUD Pointer UI
-  Widget _buildPointer({double? top, double? bottom, double? left, double? right, required String label, required bool alignRight}) {
+  Widget _buildPointer({
+    double? top,
+    double? bottom,
+    double? left,
+    double? right,
+    required String label,
+    required bool alignRight,
+  }) {
     return Positioned(
       top: top,
       bottom: bottom,
@@ -114,25 +171,32 @@ class VehicleDashboard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (alignRight) Container(width: 40, height: 1, color: Colors.blueAccent.withOpacity(0.5)),
+          if (alignRight) Container(width: 30, height: 1, color: Colors.blueAccent.withOpacity(0.5)),
           if (alignRight) const SizedBox(width: 8),
           Text(
             label,
             textAlign: alignRight ? TextAlign.left : TextAlign.right,
             style: GoogleFonts.robotoMono(
-              color: Colors.white70,
+              color: Colors.white,
               fontSize: 12,
-              height: 1.2,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
             ),
           ),
           if (!alignRight) const SizedBox(width: 8),
-          if (!alignRight) Container(width: 40, height: 1, color: Colors.blueAccent.withOpacity(0.5)),
+          if (!alignRight) Container(width: 30, height: 1, color: Colors.blueAccent.withOpacity(0.5)),
         ],
       ),
     );
   }
 
-  Widget _buildDetailCard(String title, String subtitle) {
+  // Beautiful Data Cards for the bottom section
+  Widget _buildDataCard({
+    required IconData icon,
+    required String title,
+    required String line1,
+    required String line2,
+  }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -140,12 +204,36 @@ class VehicleDashboard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          Text(subtitle, style: GoogleFonts.outfit(fontSize: 14, color: Colors.white60)),
+          Icon(icon, color: Colors.blueAccent, size: 28),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  line1,
+                  style: GoogleFonts.robotoMono(fontSize: 14, color: Colors.white70),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  line2,
+                  style: GoogleFonts.robotoMono(fontSize: 14, color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

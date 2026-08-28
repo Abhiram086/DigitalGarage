@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/garage_provider.dart';
 import 'screens/splash_screen.dart';
 
 void main() {
-  runApp(const CarDashboardApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => GarageProvider()),
+      ],
+      child: const CarDashboardApp(),
+    ),
+  );
 }
 
 class CarDashboardApp extends StatelessWidget {
@@ -14,7 +23,7 @@ class CarDashboardApp extends StatelessWidget {
       title: 'Car Health & Maintenance',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3: true),
-      home: const SplashScreen(), // Starts the app here!
+      home: const SplashScreen(),
     );
   }
 }

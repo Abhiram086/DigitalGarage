@@ -1,5 +1,8 @@
+import 'package:car_dashboard/providers/garage_provider.dart';
+import 'package:car_dashboard/screens/add_vehicle_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'dart:math' as math; // Required for 3D angles
 import 'vehicle_dashboard.dart';
 
@@ -33,6 +36,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    // Watch the provider for changes
+    final garage = context.watch<GarageProvider>().vehicles;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F13),
       appBar: AppBar(
@@ -42,43 +48,39 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           'Select Vehicle',
           style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
         ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          _buildAnimatedCard(
-            index: 0,
-            child: _buildVehicleCard(
-              context,
-              nickname: 'Daily Driver',
-              model: 'Mahindra 3XO',
-              plate: 'KL 36 M 3020',
-              assetPath: 'assets/models/generic_car.glb', // Add this!
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildAnimatedCard(
-            index: 1,
-            child: _buildVehicleCard(
-              context,
-              nickname: 'Weekend Ride',
-              model: 'Royal Enfield GT 650',
-              plate: 'KL 36 X 9999',
-              assetPath: 'assets/models/generic_bike.glb', // Add this!
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildAnimatedCard(
-            index: 2,
-            child: _buildVehicleCard(
-              context,
-              nickname: 'Office',
-              model: 'Honda CB 350RS',
-              plate: 'KL 36 X 9999',
-              assetPath: 'assets/models/generic_bike.glb', // Add this!
-            ),
-          ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, color: Colors.blueAccent),
+            onPressed: () {
+              // Navigate to Add Vehicle flow
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AddVehicleScreen()),
+              );
+            },
+          )
         ],
+      ),
+      body: ListView.separated(
+        padding: const EdgeInsets.all(20),
+        itemCount: garage.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 24),
+        itemBuilder: (context, index) {
+          final vehicle = garage[index];
+          return _buildAnimatedCard(
+            index: index,
+            child: _buildVehicleCard(
+              context,
+              nickname: vehicle.nickname,
+              model: "Spec ID: ${vehicle.id}",
+              plate: vehicle.plate,
+              assetPath: vehicle.assetPath,
+              odometer: vehicle.odometer,
+              engine: vehicle.engine,             // PASS TO CARD
+              transmission: vehicle.transmission, // PASS TO CARD
+            ),
+          );
+        },
       ),
     );
   }
@@ -113,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildVehicleCard(BuildContext context,
-      {required String nickname, required String model, required String plate, required String assetPath}) {
+      {required String nickname, required String model, required String plate, required String assetPath, required int odometer, required String engine, required String transmission,}) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -122,8 +124,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             pageBuilder: (context, animation, secondaryAnimation) => VehicleDashboard(
               nickname: nickname,
               model: model,
+              engine: engine, // Pending backend GET update
+              transmission: transmission, // Pending backend GET update
               plate: plate,
-              assetPath: assetPath, // Pass the path to the dashboard!
+              odometer: odometer,
+              assetPath: assetPath,
             ),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
@@ -132,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
         );
       },
+      // ... keep the rest of your card UI here
       child: Container(
         height: 200,
         decoration: BoxDecoration(
