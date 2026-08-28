@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:17
+    container_name: digital-garage-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: digital_garage
+      POSTGRES_USER: digital_garage
+      POSTGRES_PASSWORD: digital_garage_dev
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - digital_garage_data:/var/lib/postgresql/data
+
+volumes:
+  digital_garage_data:
