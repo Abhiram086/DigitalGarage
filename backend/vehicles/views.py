@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from .models import (
     Engine,
@@ -7,6 +8,7 @@ from .models import (
     VehicleMake,
     VehicleModel,
     VehicleSpecification,
+    UserVehicle,
 )
 from .serializers import (
     EngineSerializer,
@@ -14,6 +16,7 @@ from .serializers import (
     VehicleMakeSerializer,
     VehicleModelSerializer,
     VehicleSpecificationSerializer,
+    UserVehicleSerializer,
 )
 
 
@@ -79,3 +82,76 @@ class VehicleSpecificationListView(APIView):
         )
 
         return Response(serializer.data)
+
+class UserVehicleListView(APIView):
+    permission_classes = [IsAuthenticated]  #Only allow requests from authenticated user
+
+    def get(self, request):                         #get for showing current User's cars
+        vehicles = UserVehicle.objects.filter(
+            user=request.user
+        )
+
+        serializer = UserVehicleSerializer(
+            vehicles,
+            many=True
+        )
+
+        return Response(serializer.data)
+
+    def post(self, request):                    #Post for creating new car
+        serializer = UserVehicleSerializer(         #gets data of a new car created by user
+            data=request.data
+        )
+
+        if serializer.is_valid():                   #if data is valid, then proceed to create UserVehicle in database row
+            vehicle = serializer.save(
+                user=request.user
+            )
+
+            return Response(
+                UserVehicleSerializer(vehicle).data,
+                status=201
+            )
+
+        return Response(
+            serializer.errors,
+            status=400
+        )
+
+class UserVehicleDetailView(APIView):           #used to retrieve specific car data/info
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, request, pk):
+        return UserVehicle.objects.get(
+            pk=pk,
+            user=request.user
+        )
+
+    def get(self, request, pk):
+        vehicle = self.get_object(request, pk)
+
+        serializer = UserVehicleSerializer(vehicle)
+
+        return Response(serializer.data)
+
+    def patch(self, request, pk):
+        vehicle = self.get_object(request, pk)
+
+        serializer = UserVehicleSerializer(
+            vehicle,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, pk):                          #delete specific car
+        vehicle = self.get_object(request, pk)  
+
+        vehicle.delete()
+
+        return Response(status=204)

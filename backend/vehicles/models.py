@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 
 class VehicleMake(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -76,15 +76,26 @@ class VehicleSpecification(models.Model):
 
 
 class UserVehicle(models.Model):
-    # We'll connect this to Django's User model when we build accounts.
-    # For now, this model is intentionally incomplete.
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="vehicles"
+    )
+
     vehicle_specification = models.ForeignKey(
         VehicleSpecification,
         on_delete=models.PROTECT,
         related_name="user_vehicles"
     )
-    nickname = models.CharField(max_length=100)
-    odometer = models.PositiveIntegerField(null=True, blank=True)
+
+    nickname = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    odometer = models.PositiveIntegerField(
+        default=0
+    )
 
     def __str__(self):
-        return self.nickname
+        return f"{self.user.username} - {self.nickname}"
