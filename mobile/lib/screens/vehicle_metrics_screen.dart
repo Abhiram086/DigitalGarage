@@ -1,5 +1,6 @@
 import 'package:car_dashboard/models/vehicle.dart';
 import 'package:car_dashboard/providers/garage_provider.dart';
+import 'package:car_dashboard/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -27,7 +28,10 @@ class _VehicleMetricsScreenState extends State<VehicleMetricsScreen> {
   final plateController = TextEditingController();
   final odometerController = TextEditingController();
 
-  void _saveVehicle() {
+// Add a loading state variable at the top of your state class:
+  bool isProcessing = false;
+
+  void _saveVehicle() async {
     final nickname = nicknameController.text.trim();
     final plate = plateController.text.trim();
     final odometer = int.tryParse(odometerController.text.trim()) ?? 0;
@@ -39,27 +43,53 @@ class _VehicleMetricsScreenState extends State<VehicleMetricsScreen> {
       return;
     }
 
-    final newVehicle = Vehicle(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: 'Car',
-      nickname: nickname,
-      plate: plate,
-      odometer: odometer,
-      assetPath: 'assets/models/generic_car.glb',
-      engine: widget.engineName,             // SAVE REAL ENGINE
-      transmission: widget.transmissionName, // SAVE REAL TRANSMISSION
+    setState(() => isProcessing = true);
+
+    // 1. PING DJANGO: Save to the real database
+    bool success = await ApiService.addMyVehicle(
+      widget.specificationId,
+      nickname,
+      odometer,
     );
 
-    context.read<GarageProvider>().addVehicle(newVehicle);
+    if (success) {
+      // 2. UPDATE UI: If successful, create the local 3D card
+      final newVehicle = Vehicle(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        type: 'Car',
+        nickname: nickname,
+        plate: plate,
+        odometer: odometer,
+        assetPath: 'assets/models/generic_car.glb',
+        engine: widget.engineName,
+        transmission: widget.transmissionName,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Telemetry Initialized!"),
-        backgroundColor: Colors.green,
-      ),
-    );
+      // Add to local memory so it appears instantly without reloading
+      if (mounted) {
+        context.read<GarageProvider>().addVehicle(newVehicle);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Telemetry Sync Successful!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Failed to sync with server. Try again."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
 
-    Navigator.popUntil(context, (route) => route.isFirst);
+    if (mounted) {
+      setState(() => isProcessing = false);
+    }
   }
 
   @override
@@ -137,7 +167,9 @@ class _VehicleMetricsScreenState extends State<VehicleMetricsScreen> {
             ),
 
             const SizedBox(height: 48),
-            MyButton(
+            isProcessing
+                ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
+                : MyButton(
               onTap: _saveVehicle,
               text: "INITIALIZE TELEMETRY",
             ),

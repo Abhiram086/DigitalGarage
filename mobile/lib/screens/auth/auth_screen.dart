@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../components/my_button.dart';
 import '../../components/my_text_field.dart';
+import '../../providers/auth_provider.dart';
 import '../home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -12,56 +14,74 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  // This single boolean controls the entire expanding/collapsing UI
   bool isLogin = true;
+  bool isProcessing = false;
 
-  final nameController = TextEditingController();
+  final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
   void toggleAuthMode() {
-    // Clears the fields when switching modes so old passwords don't linger
-    nameController.clear();
+    usernameController.clear();
+    emailController.clear();
     passwordController.clear();
     confirmPasswordController.clear();
-
-    setState(() {
-      isLogin = !isLogin;
-    });
+    setState(() => isLogin = !isLogin);
   }
 
-  void authenticate() {
+  Future<void> authenticate() async {
+    final username = usernameController.text.trim();
+    final password = passwordController.text.trim();
+    final email = emailController.text.trim();
+
+    // Grab our new AuthProvider
+    final auth = context.read<AuthProvider>();
+
+    // 1. BLANK FIELD CHECK
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill in required fields.", style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() => isProcessing = true);
+
     if (!isLogin) {
-      // REGISTER LOGIC
-      if (passwordController.text != confirmPasswordController.text) {
+      // 2. REGISTER LOGIC
+      if (password != confirmPasswordController.text) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Passwords do not match. Sync failed.")),
+          const SnackBar(content: Text("Passwords do not match.", style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
         );
+        setState(() => isProcessing = false);
         return;
       }
 
-      // Simulate backend save...
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Profile Created! Please log in to authorize access."),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // Instantly fold the page back up into Login mode
-      setState(() {
-        isLogin = true;
-      });
-
+      bool success = await auth.register(username, email, password);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profile Created! Please log in."), backgroundColor: Colors.green),
+        );
+        setState(() => isLogin = true); // Fold back into login mode automatically
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registration failed. Username may exist.", style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+        );
+      }
     } else {
-      // LOGIN LOGIC
-      // Simulate checking credentials...
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      // 3. LOGIN LOGIC
+      bool success = await auth.login(username, password);
+      if (success) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Invalid credentials.", style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+        );
+      }
     }
+
+    setState(() => isProcessing = false);
   }
 
   @override
@@ -75,7 +95,6 @@ class _AuthScreenState extends State<AuthScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Animated Icon
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
@@ -87,63 +106,23 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Universal Heading
                 Text(
                   "GARAGE ACCESS",
-                  style: GoogleFonts.outfit(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 2,
-                  ),
+                  style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 2),
                 ),
                 const SizedBox(height: 10),
-
-                // Animated Subtitle
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   child: Text(
                     isLogin ? "Enter credentials to sync telemetry." : "Register new profile to access garage.",
                     key: ValueKey(isLogin),
-                    style: GoogleFonts.robotoMono(
-                      fontSize: 14,
-                      color: Colors.white60,
-                    ),
+                    style: GoogleFonts.robotoMono(fontSize: 14, color: Colors.white60),
                   ),
                 ),
                 const SizedBox(height: 40),
 
-                // EXTRA FIELD 1: Driver Name (Expands/Collapses)
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.fastOutSlowIn,
-                  child: isLogin
-                      ? const SizedBox.shrink() // Takes up zero space when logging in
-                      : Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: MyTextField(
-                      controller: nameController,
-                      hintText: "Driver Name",
-                      obscureText: false,
-                    ),
-                  ),
-                ),
+                MyTextField(controller: usernameController, hintText: "Username", obscureText: false),
 
-                // CORE FIELDS: Always visible
-                MyTextField(
-                  controller: emailController,
-                  hintText: "Email Address",
-                  obscureText: false,
-                ),
-                const SizedBox(height: 16),
-                MyTextField(
-                  controller: passwordController,
-                  hintText: "Password",
-                  obscureText: true,
-                ),
-
-                // EXTRA FIELD 2: Confirm Password (Expands/Collapses)
                 AnimatedSize(
                   duration: const Duration(milliseconds: 400),
                   curve: Curves.fastOutSlowIn,
@@ -151,24 +130,30 @@ class _AuthScreenState extends State<AuthScreen> {
                       ? const SizedBox.shrink()
                       : Padding(
                     padding: const EdgeInsets.only(top: 16),
-                    child: MyTextField(
-                      controller: confirmPasswordController,
-                      hintText: "Confirm Password",
-                      obscureText: true,
-                    ),
+                    child: MyTextField(controller: emailController, hintText: "Email Address", obscureText: false),
                   ),
                 ),
+                const SizedBox(height: 16),
 
-                const SizedBox(height: 30),
+                MyTextField(controller: passwordController, hintText: "Password", obscureText: true),
 
-                // Dynamic Button
-                MyButton(
-                  onTap: authenticate,
-                  text: isLogin ? "INITIALIZE" : "REGISTER",
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.fastOutSlowIn,
+                  child: isLogin
+                      ? const SizedBox.shrink()
+                      : Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: MyTextField(controller: confirmPasswordController, hintText: "Confirm Password", obscureText: true),
+                  ),
                 ),
                 const SizedBox(height: 30),
 
-                // Bottom Toggle Text
+                isProcessing
+                    ? const CircularProgressIndicator(color: Colors.blueAccent)
+                    : MyButton(onTap: authenticate, text: isLogin ? "INITIALIZE" : "REGISTER"),
+                const SizedBox(height: 30),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -181,10 +166,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       onTap: toggleAuthMode,
                       child: Text(
                         isLogin ? "Create one" : "Sync here",
-                        style: GoogleFonts.robotoMono(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blueAccent,
-                        ),
+                        style: GoogleFonts.robotoMono(fontWeight: FontWeight.bold, color: Colors.blueAccent),
                       ),
                     ),
                   ],
