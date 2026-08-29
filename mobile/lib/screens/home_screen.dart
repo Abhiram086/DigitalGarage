@@ -1,9 +1,11 @@
 import 'package:car_dashboard/providers/garage_provider.dart';
+import 'package:car_dashboard/providers/auth_provider.dart';
 import 'package:car_dashboard/screens/add_vehicle_screen.dart';
+import 'package:car_dashboard/screens/auth/auth_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'dart:math' as math; // Required for 3D angles
+import 'dart:math' as math;
 import 'vehicle_dashboard.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,13 +21,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    // The master timer controls the total duration of all flips
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     );
-    // Automatically start the animation when the screen loads
-    _controller.forward();
+
+    // DO NOT call _controller.forward() here!
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 1. Wait for the API to fetch the cars
+      await context.read<GarageProvider>().fetchVehicles();
+
+      // 2. NOW trigger the card flip animation!
+      if (mounted) {
+        _controller.forward();
+      }
+    });
   }
 
   @override
@@ -36,8 +47,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    // Watch the provider for changes
-    final garage = context.watch<GarageProvider>().vehicles;
+    final garageProvider = context.watch<GarageProvider>();
+    final garage = garageProvider.vehicles;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F13),
@@ -45,23 +56,37 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'Select Vehicle',
+          'My Garage',
           style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
         ),
         actions: [
+          // ADD VEHICLE BUTTON (Only show in AppBar if garage is not empty)
+          if (garage.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.add, color: Colors.blueAccent),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const AddVehicleScreen()));
+              },
+            ),
+          // LOGOUT BUTTON
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.blueAccent),
-            onPressed: () {
-              // Navigate to Add Vehicle flow
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AddVehicleScreen()),
-              );
+            icon: const Icon(Icons.logout_rounded, color: Colors.white54),
+            onPressed: () async {
+              await context.read<AuthProvider>().logout();
+              if (context.mounted) {
+                context.read<GarageProvider>().clearVehicles();
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AuthScreen()));
+              }
             },
-          )
+          ),
+          const SizedBox(width: 8),
         ],
       ),
-      body: ListView.separated(
+      body: garageProvider.isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
+          : garage.isEmpty
+          ? _buildEmptyState()
+          : ListView.separated(
         padding: const EdgeInsets.all(20),
         itemCount: garage.length,
         separatorBuilder: (context, index) => const SizedBox(height: 24),
@@ -72,15 +97,50 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             child: _buildVehicleCard(
               context,
               nickname: vehicle.nickname,
-              model: "Spec ID: ${vehicle.id}",
+              model: "Spec ID: ${vehicle.engine}", // Temp mapping
               plate: vehicle.plate,
               assetPath: vehicle.assetPath,
               odometer: vehicle.odometer,
-              engine: vehicle.engine,             // PASS TO CARD
-              transmission: vehicle.transmission, // PASS TO CARD
+              engine: vehicle.engine,
+              transmission: vehicle.transmission,
             ),
           );
         },
+      ),
+    );
+  }
+
+  // --- THE NEW EMPTY STATE UI ---
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.directions_car_outlined, size: 100, color: Colors.white.withOpacity(0.1)),
+          const SizedBox(height: 24),
+          Text(
+            "Your garage is empty.",
+            style: GoogleFonts.outfit(color: Colors.white54, fontSize: 18),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 10,
+              shadowColor: Colors.blueAccent.withOpacity(0.5),
+            ),
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: Text(
+              "INITIALIZE VEHICLE",
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.5),
+            ),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const AddVehicleScreen()));
+            },
+          )
+        ],
       ),
     );
   }

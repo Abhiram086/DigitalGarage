@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
-class VehicleDashboard extends StatelessWidget {
+class VehicleDashboard extends StatefulWidget {
   final String nickname;
   final String model;
   final String engine;
@@ -23,6 +23,25 @@ class VehicleDashboard extends StatelessWidget {
   });
 
   @override
+  State<VehicleDashboard> createState() => _VehicleDashboardState();
+}
+
+class _VehicleDashboardState extends State<VehicleDashboard> {
+  bool _isModelLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // The webview takes ~2 seconds to boot the 3D engine.
+    // We will show a high-tech loading overlay for 2.5 seconds, then fade it out.
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() => _isModelLoading = false);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F13),
@@ -34,7 +53,7 @@ class VehicleDashboard extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          nickname.toUpperCase(),
+          widget.nickname.toUpperCase(),
           style: GoogleFonts.outfit(fontWeight: FontWeight.w600, letterSpacing: 2),
         ),
         centerTitle: true,
@@ -54,7 +73,7 @@ class VehicleDashboard extends StatelessWidget {
                     width: double.infinity,
                     height: 380,
                     child: ModelViewer(
-                      src: assetPath,
+                      src: widget.assetPath,
                       alt: 'A 3D model of the vehicle',
                       interactionPrompt: InteractionPrompt.auto,
                       interactionPromptStyle: InteractionPromptStyle.basic,
@@ -71,29 +90,62 @@ class VehicleDashboard extends StatelessWidget {
                     ),
                   ),
 
+                  // THE HOLOGRAPH LOADING MASK
+                  IgnorePointer(
+                    child: AnimatedOpacity(
+                      opacity: _isModelLoading ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 800),
+                      curve: Curves.easeInOut,
+                      child: Container(
+                        width: double.infinity,
+                        height: 380,
+                        color: const Color(0xFF0F0F13), // Matches background exactly
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(
+                              color: Colors.blueAccent,
+                              strokeWidth: 2,
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              "INITIALIZING HOLOGRAPH...",
+                              style: GoogleFonts.robotoMono(
+                                color: Colors.blueAccent,
+                                letterSpacing: 3,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
                   // DYNAMIC TELEMETRY POINTERS
                   _buildPointer(
                     top: 40,
                     left: 20,
-                    label: 'CHASSIS\n$model',
+                    label: 'CHASSIS\n${widget.model}',
                     alignRight: false,
                   ),
                   _buildPointer(
                     top: 80,
                     right: 20,
-                    label: 'ODO\n${_formatNumber(odometer)} KM',
+                    label: 'ODO\n${_formatNumber(widget.odometer)} KM',
                     alignRight: true,
                   ),
                   _buildPointer(
                     bottom: 60,
                     left: 30,
-                    label: 'POWERTRAIN\n$engine',
+                    label: 'POWERTRAIN\n${widget.engine}',
                     alignRight: false,
                   ),
                   _buildPointer(
                     bottom: 40,
                     right: 30,
-                    label: 'REGISTRATION\n$plate',
+                    label: 'REGISTRATION\n${widget.plate}',
                     alignRight: true,
                   ),
                 ],
@@ -119,25 +171,24 @@ class VehicleDashboard extends StatelessWidget {
                 _buildDataCard(
                   icon: Icons.fingerprint_rounded,
                   title: 'Vehicle Identity',
-                  line1: 'Alias: $nickname',
-                  line2: 'Plates: $plate',
+                  line1: 'Alias: ${widget.nickname}',
+                  line2: 'Plates: ${widget.plate}',
                 ),
                 const SizedBox(height: 12),
 
                 _buildDataCard(
                   icon: Icons.settings_suggest_rounded,
                   title: 'Hardware Specification',
-                  line1: 'Engine: $engine',
-                  line2: 'Transmission: $transmission',
+                  line1: 'Engine: ${widget.engine}',
+                  line2: 'Transmission: ${widget.transmission}',
                 ),
                 const SizedBox(height: 12),
 
                 _buildDataCard(
                   icon: Icons.timeline_rounded,
                   title: 'Maintenance Tracking',
-                  line1: 'Current Read: ${_formatNumber(odometer)} km',
-                  // Simple predictive logic: adds 10k to current odo for next service interval
-                  line2: 'Est. Next Service: ${_formatNumber(odometer + 10000)} km',
+                  line1: 'Current Read: ${_formatNumber(widget.odometer)} km',
+                  line2: 'Est. Next Service: ${_formatNumber(widget.odometer + 10000)} km',
                 ),
                 const SizedBox(height: 40),
               ]),
@@ -148,13 +199,11 @@ class VehicleDashboard extends StatelessWidget {
     );
   }
 
-  // Helper to format large numbers with commas (e.g., 12500 -> 12,500)
   String _formatNumber(int number) {
     return number.toString().replaceAllMapped(
         RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
   }
 
-  // Futuristic HUD Pointer UI
   Widget _buildPointer({
     double? top,
     double? bottom,
@@ -190,7 +239,6 @@ class VehicleDashboard extends StatelessWidget {
     );
   }
 
-  // Beautiful Data Cards for the bottom section
   Widget _buildDataCard({
     required IconData icon,
     required String title,

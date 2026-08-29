@@ -1,6 +1,8 @@
+import 'package:car_dashboard/providers/auth_provider.dart';
 import 'package:car_dashboard/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'auth/auth_screen.dart'; // Ensure this points to your AuthScreen
 
 class SplashScreen extends StatefulWidget {
@@ -39,13 +41,18 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       );
     });
 
-    // --- ADD THE DELAY HERE ---
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        _controller.forward().then((_) {
-          _navigateToNextScreen();
-        });
-      }
+    // 1. WAIT FOR FLUTTER TO ACTUALLY RENDER THE FIRST FRAME
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 2. NOW start the 800ms delay to let the screen settle
+      Future.delayed(const Duration(milliseconds: 800), () async {
+        if (mounted) {
+          await context.read<AuthProvider>().checkAuthStatus();
+          // 3. START THE ANIMATION
+          _controller.forward().then((_) {
+            _navigateToNextScreen();
+          });
+        }
+      });
     });
   }
 

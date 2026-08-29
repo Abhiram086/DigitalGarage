@@ -150,4 +150,22 @@ class ApiService {
       return false;
     }
   }
+
+  // --- 5. FETCH USER GARAGE (GET) ---
+  static Future<List<dynamic>> getMyVehicles() async {
+    try {
+      final headers = await getAuthHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/vehicles/my-cars/'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching my vehicles: $e');
+      return [];
+    }
+  }
 }
