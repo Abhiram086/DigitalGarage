@@ -68,9 +68,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     // ---------------------------------------------------------
     // THE SMART GATE LOGIC
     // ---------------------------------------------------------
-    // TODO: When Sidharth's backend is ready, check the JWT token here.
-    // For now, we will simulate that no user is logged in.
-    bool isLoggedIn = false;
+    // Read the actual authentication state from the provider
+    final isLoggedIn = context.read<AuthProvider>().isAuthenticated;
 
     // Decide which screen to load based on the background check
     Widget nextScreen = isLoggedIn ? const HomeScreen() : const AuthScreen();

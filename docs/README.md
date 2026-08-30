@@ -858,6 +858,21 @@ The current vehicle data is development/sample data and should be verified befor
 [ ] Distance/trip tracking
 [ ] Push notifications
 ```
+---
+
+## Security & Production Deployment (Roadmap)
+
+**Current Development Status:**
+The mobile app currently connects to the local Django server via a secure Tailscale VPN tunnel. Because this uses standard `http://` addressing, `android:usesCleartextTraffic="true"` is temporarily enabled in `mobile/android/app/src/main/AndroidManifest.xml`. This remains secure during development because Tailscale automatically wraps the traffic in WireGuard encryption.
+
+**Production Deployment Plan:**
+Google Play Store policies flag apps that allow open cleartext traffic. Before launching to real users, the backend will transition to a production-ready HTTPS architecture:
+
+1. **Domain Assignment:** Purchase and configure a production domain (e.g., `api.digitalgarage.com`).
+2. **Cloud Hosting:** Deploy the Django backend and PostgreSQL database to a cloud provider (AWS, DigitalOcean, etc.) behind a reverse proxy (Nginx or Caddy).
+3. **SSL/TLS Encryption:** Provision and install an SSL certificate (via Let's Encrypt) to encrypt all traffic.
+4. **Frontend Update:** Update the Flutter `ApiService` `baseUrl` to point to the secure `https://` domain.
+5. **Security Patch:** Remove the `usesCleartextTraffic="true"` bypass from the Android Manifest to enforce HTTPS-only communication.
 
 ---
 
