@@ -17,6 +17,7 @@ from .serializers import (
     VehicleModelSerializer,
     VehicleSpecificationSerializer,
     UserVehicleSerializer,
+    UserVehicleDetailSerializer,
 )
 
 
@@ -130,7 +131,7 @@ class UserVehicleDetailView(APIView):           #used to retrieve specific car d
     def get(self, request, pk):
         vehicle = self.get_object(request, pk)
 
-        serializer = UserVehicleSerializer(vehicle)
+        serializer = UserVehicleDetailSerializer(vehicle)
 
         return Response(serializer.data)
 
