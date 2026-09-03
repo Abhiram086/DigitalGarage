@@ -13,5 +13,6 @@ urlpatterns = [
     path("api/auth/login/", TokenObtainPairView.as_view()),
     path("api/auth/me/", MeView.as_view()),
     path("api/vehicles/",include("vehicles.urls")),
+    path("api/maintenance/",include("maintenance.urls")),
     path("api/auth/refresh/", TokenRefreshView.as_view()),
 ]
