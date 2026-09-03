@@ -25,8 +25,25 @@ class MaintenanceItemListView(APIView):
 
         return Response(serializer.data)
 
-class ServiceVisitCreateView(APIView):
+class ServiceVisitListCreateView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        vehicle_id = request.query_params.get("vehicle")
+
+        visits = ServiceVisit.objects.filter(
+            vehicle_id=vehicle_id,
+            vehicle__user=request.user
+        ).prefetch_related(
+            "items__maintenance_item"
+        ).order_by("-date")
+
+        serializer = ServiceVisitSerializer(
+            visits,
+            many=True
+        )
+
+        return Response(serializer.data)
 
     @transaction.atomic
     def post(self, request):
